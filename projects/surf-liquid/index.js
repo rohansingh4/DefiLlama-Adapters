@@ -2,6 +2,7 @@ const ADDRESSES = require('../helper/coreAssets.json')
 const V2_FACTORY = "0x1D283b668F947E03E8ac8ce8DA5505020434ea0E";
 const V3_FACTORY = "0xf1d64dee9f8e109362309a4bfbb523c8e54fa1aa";
 const SURF_STAKING = "0xB0fDFc081310A5914c2d2c97e7582F4De12FA9d6";
+const SURF_STAKING_V2 = "0xeBa3B16E175fD36c8b01953D9e3962AB3c575718";
 const SURF_TOKEN = "0xcdca2eaae4a8a6b83d7a3589946c2301040dafbf";
 const USDC = ADDRESSES.base.USDC;
 const WETH = ADDRESSES.optimism.WETH_1;
@@ -151,9 +152,13 @@ async function tvlBase(api) {
 }
 
 async function staking(api) {
-  // SURF staking contract
-  const totalStaked = await api.call({ abi: "uint256:totalStaked", target: SURF_STAKING });
-  api.add(SURF_TOKEN, totalStaked);
+  // SURF staking contracts (v1 + v2)
+  const [stakedV1, stakedV2] = await Promise.all([
+    api.call({ abi: "uint256:totalStaked", target: SURF_STAKING }),
+    api.call({ abi: "uint256:totalStaked", target: SURF_STAKING_V2 }),
+  ]);
+  api.add(SURF_TOKEN, stakedV1);
+  api.add(SURF_TOKEN, stakedV2);
 
   // CreatorBid SURF subscriptions (SURF locked in the token contract)
   const subscribed = await api.call({
